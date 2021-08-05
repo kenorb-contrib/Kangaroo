@@ -23,6 +23,7 @@
 #include <string>
 #include <string.h>
 #include <stdexcept>
+#include <unistd.h>
 
 using namespace std;
 
@@ -40,7 +41,7 @@ void printUsage() {
   printf(" -gpuId gpuId1,gpuId2,...: List of GPU(s) to use, default is 0\n");
   printf(" -g g1x,g1y,g2x,g2y,...: Specify GPU(s) kernel gridsize, default is 2*(MP),2*(Core/MP)\n");
   printf(" -d: Specify number of leading zeros for the DP method (default is auto)\n");
-  printf(" -t nbThread: Secify number of thread\n");
+  printf(" -t nbThread: Secify number of thread (use -t 0 to disable CPU threads, or -t -1 to use all of them)\n");
   printf(" -w workfile: Specify file to save work into (current processed key only)\n");
   printf(" -i workfile: Specify file to load work from (current processed key only)\n");
   printf(" -wi workInterval: Periodic interval (in seconds) for saving work\n");
@@ -188,6 +189,9 @@ int main(int argc, char* argv[]) {
     if(strcmp(argv[a], "-t") == 0) {
       CHECKARG("-t",1);
       nbCPUThread = getInt("nbCPUThread",argv[a]);
+      if (nbCPUThread == -1) {
+              nbCPUThread = (int) sysconf(_SC_NPROCESSORS_ONLN);
+      }
       a++;
     } else if(strcmp(argv[a],"-d") == 0) {
       CHECKARG("-d",1);
