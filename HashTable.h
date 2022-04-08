@@ -29,6 +29,18 @@
 #define HASH_SIZE (1<<HASH_SIZE_BIT)
 #define HASH_MASK (HASH_SIZE-1)
 
+union hash160_s {
+
+    uint8_t i8[20];
+    uint16_t i16[10];
+    uint32_t i32[5];
+    uint64_t i64[3];
+
+};
+
+
+typedef union hash160_s hash160_t;
+
 #define ADD_OK        0
 #define ADD_DUPLICATE 1
 #define ADD_COLLISION 2

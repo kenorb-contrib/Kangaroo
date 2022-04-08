@@ -26,7 +26,10 @@ SRC = SECPK1/IntGroup.cpp main.cpp SECPK1/Random.cpp \
       Timer.cpp SECPK1/Int.cpp SECPK1/IntMod.cpp \
       SECPK1/Point.cpp SECPK1/SECP256K1.cpp \
       Kangaroo.cpp HashTable.cpp Thread.cpp Check.cpp \
-      Backup.cpp Network.cpp Merge.cpp PartMerge.cpp
+      Backup.cpp Network.cpp Merge.cpp PartMerge.cpp \
+      Base58.cpp hash/ripemd160.cpp \
+      hash/sha256.cpp hash/sha512.cpp hash/ripemd160_sse.cpp \
+      hash/sha256_sse.cpp Bech32.cpp
 
 OBJDIR = obj
 
@@ -35,7 +38,10 @@ OBJET = $(addprefix $(OBJDIR)/, \
       Timer.o SECPK1/Int.o SECPK1/IntMod.o \
       SECPK1/Point.o SECPK1/SECP256K1.o \
       Kangaroo.o HashTable.o Thread.o Check.o Backup.o \
-      Network.o Merge.o PartMerge.o)
+      Network.o Merge.o PartMerge.o \
+      hash/ripemd160.o hash/sha256.o hash/sha512.o \
+      hash/ripemd160_sse.o hash/sha256_sse.o Bech32.o \
+      Base58.o )
 
 endif
 
@@ -85,7 +91,7 @@ bsgs: $(OBJET)
 	@echo Making Kangaroo...
 	$(CXX) $(OBJET) $(LFLAGS) -o kangaroo
 
-$(OBJET): | $(OBJDIR) $(OBJDIR)/SECPK1 $(OBJDIR)/GPU
+$(OBJET): | $(OBJDIR) $(OBJDIR)/SECPK1 $(OBJDIR)/GPU $(OBJDIR)/hash
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
@@ -96,9 +102,13 @@ $(OBJDIR)/GPU: $(OBJDIR)
 $(OBJDIR)/SECPK1: $(OBJDIR)
 	cd $(OBJDIR) &&	mkdir -p SECPK1
 
+$(OBJDIR)/hash: $(OBJDIR)
+	cd $(OBJDIR) &&	mkdir -p hash
+
 clean:
 	@echo Cleaning...
 	@rm -f obj/*.o
 	@rm -f obj/GPU/*.o
 	@rm -f obj/SECPK1/*.o
+	@rm -f obj/hash/*.o
 

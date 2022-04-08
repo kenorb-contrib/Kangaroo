@@ -198,6 +198,11 @@ bool Kangaroo::Output(Int *pk,char sInfo,int sType) {
   ::fprintf(f,"Key#%2d [%d%c]Pub:  0x%s \n",keyIdx,sType,sInfo,secp->GetPublicKeyHex(true,keysToSearch[keyIdx]).c_str());
   if(PR.equals(keysToSearch[keyIdx])) {
     ::fprintf(f,"       Priv: 0x%s \n",pk->GetBase16().c_str());
+    // Bill
+    ::fprintf(f,"       Pub : 0x%s \n",secp->GetPublicKeyHex(true,PR).c_str());
+      hash160_t h1;
+      secp->GetHash160(P2PKH, true, PR, h1.i8);
+      ::fprintf(f,"       Add : %s\n", secp->GetAddress(P2PKH, true, h1.i8).c_str());
   } else {
     ::fprintf(f,"       Failed !\n");
     if(needToClose)

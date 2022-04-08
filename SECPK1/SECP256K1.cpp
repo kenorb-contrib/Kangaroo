@@ -16,7 +16,11 @@
 */
 
 #include "SECP256k1.h"
+#include "hash/sha256.h"
 #include "IntGroup.h"
+#include "hash/ripemd160.h"
+#include "Base58.h"
+#include "Bech32.h"
 #include <string.h>
 
 Secp256K1::Secp256K1() {
@@ -566,5 +570,86 @@ bool Secp256K1::EC(Point &p) {
   _s.ModSub(&_p);
 
   return _s.IsZero(); // ( ((pow2(y) - (pow3(x) + 7)) % P) == 0 );
+
+}
+
+std::string Secp256K1::GetAddress(int type, bool compressed,unsigned char *hash160) {
+
+    unsigned char address[25];
+    switch(type) {
+
+        case P2PKH:
+            address[0] = 0x00;
+            break;
+
+        case P2SH:
+            address[0] = 0x05;
+            break;
+
+        case BECH32:
+        {
+            char output[128];
+            segwit_addr_encode(output, "bc", 0, hash160, 20);
+            return std::string(output);
+        }
+            break;
+    }
+    memcpy(address + 1, hash160,20);
+    sha256_checksum(address,21,address+21);
+
+    // Base58
+    return EncodeBase58(address, address + 25);
+
+}
+
+void Secp256K1::GetHash160(int type, bool compressed, Point &pubKey, unsigned char *hash) {
+
+    unsigned char shapk[64];
+
+    switch (type) {
+
+        case P2PKH:
+        case BECH32:
+        {
+            unsigned char publicKeyBytes[128];
+
+            if (!compressed) {
+
+                // Full public key
+                publicKeyBytes[0] = 0x4;
+                pubKey.x.Get32Bytes(publicKeyBytes + 1);
+                pubKey.y.Get32Bytes(publicKeyBytes + 33);
+                sha256_65(publicKeyBytes, shapk);
+
+            } else {
+
+                // Compressed public key
+                publicKeyBytes[0] = pubKey.y.IsEven() ? 0x2 : 0x3;
+                pubKey.x.Get32Bytes(publicKeyBytes + 1);
+                sha256_33(publicKeyBytes, shapk);
+
+            }
+
+            ripemd160_32(shapk, hash);
+        }
+            break;
+
+        case P2SH:
+        {
+
+            // Redeem Script (1 to 1 P2SH)
+            unsigned char script[64];
+
+            script[0] = 0x00;  // OP_0
+            script[1] = 0x14;  // PUSH 20 bytes
+            GetHash160(P2PKH, compressed, pubKey, script + 2);
+
+            sha256(script, 22, shapk);
+            ripemd160_32(shapk, hash);
+
+        }
+            break;
+
+    }
 
 }
